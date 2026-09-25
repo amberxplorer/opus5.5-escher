@@ -620,6 +620,8 @@ function drawSolid(t, F, fadeOut) {
     }
   }
   const U = uniforms3D(cam, { night, carve, carveDir });
+  // the press: ink swells a little on every kick
+  U.uHatchW = 1 + 0.14 * env('kick', t) * (t < T(24) || t > T(28) ? 1 : 0.3);
   GFX.draw('cube', batch.a, batch.n, U);
   if (batch2.n) GFX.draw(t >= T(24) ? 'ant' : 'monk', batch2.a, batch2.n, Object.assign({}, U, { uCarveN: 0 }));
   if (batch3.n) GFX.draw('cube', batch3.a, batch3.n, Object.assign({}, U, { uCarveN: 0 }));
@@ -761,7 +763,7 @@ function drawCircleLimit(t, F) {
   GFX.runScene('hyp', {
     uMob: [mv.A[0], mv.A[1], mv.rot[0], mv.rot[1]],
     uShape: [0.34 * amp, 0.1 * amp, -0.05 * amp, ss(0.6, 0.95, amp)],
-    uDisk: [W / 2, H / 2, R * lerp(0.985, 1, grow), Math.max(1.2, 1.6 * GFX.scale)],
+    uDisk: [W / 2, H / 2, R * lerp(0.985, 1, grow), Math.max(1.2, 1.6 * GFX.scale) * (1 + 0.9 * env('kick', t))],
     uLook: [base, 1, fr, bloom],
   });
   F.use[0] = 1;

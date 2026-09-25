@@ -28,7 +28,7 @@ then click, tap or press Enter. Headphones help.
 | 0:15 | sky turns to water: birds become fish as we sink; on bar 12 day turns to night and every fish turns round | E major; the drums start. On bar 12 the melody is played upside down, in E minor |
 | 0:28 | the plane goes solid: the black squares rise as engraved cubes while the camera swings to isometric | the build |
 | 0:30 | nine cubes fly into Reutersvärd's impossible triangle (1934), which fuses into Penrose's tribar (1958); the camera circles to show it is really a bent bar, and snaps back as it closes | F♯ minor, the first drop; a held breath while the camera circles |
-| 0:39 | the tribar comes apart into the endless stairs (Penrose, 1959; Escher's *Ascending and Descending*, 1960); hooded figures climb one step per beat | footsteps, and an arpeggio that rises for ever |
+| 0:39 | the tribar comes apart into the endless stairs (the Penroses' staircase; Escher's *Ascending and Descending*, 1960); hooded figures climb one step per beat | footsteps, and an arpeggio that rises for ever |
 | 0:45 | the steps let go, close into a ring and take half a twist: a Möbius strip with ants on its one side (*Möbius Strip II*) | A♭ major; the subject against itself backwards, a crab canon |
 | 1:00 | the ring becomes the edge of the Poincaré disk: a {6,4} tiling of interlocking pinwheels in the manner of *Circle Limit* | B♭ minor, the climax: the subject at three speeds at once; figure and ground swap on bars 34, 36 and 38 |
 | 1:15 | the birds again, carried through the complex logarithm into a spiral that zooms for ever (*Print Gallery*, *Path of Life*) | C minor; a Risset rhythm that speeds up for ever and never gets faster |
@@ -45,6 +45,23 @@ began. It is Bach's endlessly rising canon from the *Musical Offering*, the one 
 set beside Escher's stairs. The melody is transformed the way Escher transforms a tile:
 translated (canon), reflected (inversion), rotated in time (crab canon) and scaled
 (augmentation and diminution).
+
+## The works it quotes
+
+- M. C. Escher: *Metamorphosis II* (1939–40), *Sky and Water I* and *Day and Night* (1938),
+  *Print Gallery* and *Smaller and Smaller* (1956), *Path of Life II* (1958), *Circle Limit III*
+  (1959) and *IV* (1960), *Ascending and Descending* (1960), *Möbius Strip II* (1963).
+- Oscar Reutersvärd's triangle of nine cubes (1934), the first impossible figure.
+- Lionel and Roger Penrose, "Impossible Objects: A Special Type of Visual Illusion" (*British
+  Journal of Psychology*, 1958): the tribar and the endless staircase.
+- H. S. M. Coxeter's figure of a hyperbolic triangle tiling (1957), which set Escher off on the
+  *Circle Limit* prints.
+- J. S. Bach, the *Canon per tonos* from the *Musical Offering* (1747): a canon that climbs a tone
+  each time round and comes back an octave higher.
+- Roger Shepard's tones (1964) and Jean-Claude Risset's endless glissando and rhythm.
+- Douglas Hofstadter, *Gödel, Escher, Bach* (1979), where the phrase "strange loop" comes from.
+- Bart de Smit and Hendrik Lenstra, "The Mathematical Structure of Escher's *Print Gallery*"
+  (2003), whose complex logarithm the last scene uses.
 
 ## How it works
 

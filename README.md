@@ -2,6 +2,8 @@
 
 *a homage to M. C. Escher*
 
+**[▶ Play it in your browser](https://amberxplorer.github.io/opus5.5-escher/)**
+
 A ninety-second audiovisual piece in black and white, built as one continuous metamorphosis.
 It ends on the frame it began with. Every picture is drawn in the browser as it plays, and
 every sound is synthesized there from the score in `src/synth.js`.

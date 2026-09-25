@@ -1,0 +1,12 @@
+:root { --paper: #f1f1ef; --ink: #111111; color-scheme: light; }
+html { height: 100%; box-sizing: border-box; background: var(--paper); overflow: hidden; }
+body {
+  margin: 0; height: 100%; background: var(--paper); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  cursor: default; user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+body.play { cursor: pointer; }
+body.hide { cursor: none; }
+canvas { display: block; background: var(--paper); }
+body.nogl::after { content: "WebGL 2 is needed to see this piece."; color: var(--ink); font: italic 500 20px/1.4 "Cormorant Garamond", Georgia, serif; padding: 16px; }

@@ -173,6 +173,17 @@ p1('fish',
   [[0, 0], [0.15, -0.03], [0.3, 0.0], [0.42, 0.1], [0.52, 0.2], [0.6, 0.24], [0.64, 0.13], [0.71, 0.0], [0.82, -0.07], [0.92, -0.03], [1, 0]],
   [{ dot: [-0.1, 0.56, 0.04] }, { line: [[0.1, 0.32], [0.14, 0.5], [0.1, 0.68]] }, { line: [[0.62, 0.5], [0.9, 0.5]] }]);
 
+// a division's mirror image (the same animals, facing the other way)
+function mirror(name, src) {
+  const D = DESIGNS[src].raw;
+  const mV = (P) => P.map(([x, y]) => [x, -y]);
+  const mH = (P) => P.slice().reverse().map(([x, y]) => [1 - x, y]);
+  const mD = (list) => list.map((d) => (d.dot ? { dot: [1 - d.dot[0], d.dot[1], d.dot[2]] } : { line: d.line.map(([x, y]) => [1 - x, y]) }));
+  return design(name, { Hw: mH(D.Hw), Hb: mH(D.Hb), Vw: mV(D.Vw), Vb: mV(D.Vb), black: mD(D.black || []), white: mD(D.white || []) });
+}
+mirror('birdR', 'bird');
+mirror('fishR', 'fish');
+
 /* ───────── lettering on the grid ─────────
    Each letter is 3×5 cells: '#' full, '.' empty, and half-cells cut on a
    diagonal: a = top-left half, b = top-right, c = bottom-right, d = bottom-left.

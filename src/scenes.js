@@ -196,9 +196,18 @@ function planeCamera(t) {
   let cx = L.cx, cy = L.cy;
   // then the flight: pan right (the birds fly left), easing to a stop as the plane turns solid
   const vx = 0.42;
-  const xAt = (tt) => { const f = Math.max(0, tt - T(6)); return vx * (f - 0.9 * (1 - Math.exp(-f / 0.9))); };
-  if (t < T(14)) cx += xAt(t);
-  else { const u = Math.min(t, T(15)) - T(14), D = T(15) - T(14); cx += xAt(T(14)) + vx * (u - u * u / (2 * D)); }
+  // velocity: +vx from bar 6, turning to −vx across the inversion at bar 12, easing to rest by bar 15
+  const velAt = (tt) => {
+    let v0 = vx * (1 - Math.exp(-Math.max(0, tt - T(6)) / 0.9)) * (tt > T(6) ? 1 : 0);
+    v0 *= lerp(1, -0.85, ss(T(12) - 0.1, T(12) + 0.6, tt));
+    v0 *= 1 - ss(T(14), T(15), tt);
+    return v0;
+  };
+  // integrate (fixed small steps; cheap and exact enough)
+  let xx = 0;
+  const t1 = Math.min(t, T(15));
+  if (t1 > T(6)) { const n = Math.ceil((t1 - T(6)) / 0.02); const dt = (t1 - T(6)) / n; for (let k = 0; k < n; k++) xx += velAt(T(6) + (k + 0.5) * dt) * dt; }
+  cx += xx;
   const down = ss(T(8), T(12), t);
   cy -= down * 7.5 + ss(T(12), T(14), t) * 1.5;
   // a breath on the kicks, and a slow roll — both gone before the handoff
@@ -209,9 +218,10 @@ function planeCamera(t) {
   return { cx, cy, s, rot };
 }
 // morph state of the division at a world point
-function divisionAt(t, cam) {
+function divisionAt(t, cam, mirrored) {
   const W = GFX.W, H = GFX.H;
   const yBand = cam0y() - 3.2;         // birds above this line, fish below
+  const A = mirrored ? TILES.DESIGNS.birdR : TILES.DESIGNS.bird, B = mirrored ? TILES.DESIGNS.fishR : TILES.DESIGNS.fish;
   return (x, y) => {
     // metamorphosis wave out of the checkerboard (bars 4–6½): sweeps across the screen
     const sx = (x - cam.cx) * cam.s / W, sy = (y - cam.cy) * cam.s / H;
@@ -225,7 +235,7 @@ function divisionAt(t, cam) {
       m = 1 - ss(0, 1, p * 1.3 - 0.3 * (0.5 + 0.5 * clamp(-sx * 1.2 + sy * 0.8, -1, 1)));
     }
     const u = ss(yBand + 1.2, yBand - 2.2, y);
-    return { m, A: TILES.DESIGNS.bird, B: TILES.DESIGNS.fish, u };
+    return { m, A, B, u };
   };
 }
 function cam0y() { return titleLayout().cy; }
@@ -235,11 +245,27 @@ function drawPlane(t, F) {
   const cam = planeCamera(t);
   const v = view2D(cam.cx, cam.cy, cam.s, cam.rot);
   if (t < T(4, 2)) {
-    drawLetterGrid(ctx, v, t, { appear: t < 1.6 ? 0.15 : undefined, flip: t >= T(2) - 0.1, flipAt: T(2), flipRate: 0.085 });
-    const subA = t < T(2) ? ss(0.9, 2.0, t) : 1 - ss(T(2), T(2, 8), t);
+    // the piece opens on the very card it ends on
+    drawLetterGrid(ctx, v, t, { flip: t >= T(2) - 0.1, flipAt: T(2), flipRate: 0.085 });
+    const subA = t < T(2) ? 1 : 1 - ss(T(2), T(2, 8), t);
     drawSubtitle(ctx, v, subA);
   } else {
-    TILES.drawChecker(ctx, v, GFX.W, GFX.H, { at: divisionAt(t, cam), ink: INK, paper: PAPER, lineW: 0.024 });
+    const w0 = T(12) - 0.02;
+    const R = Math.hypot(GFX.W, GFX.H) * 0.55;
+    const r = t >= w0 ? easeOut(sat((t - w0) / 0.55)) * R : 0;
+    const opts = (mir) => ({ at: divisionAt(t, cam, mir), ink: INK, paper: PAPER, lineW: 0.024 });
+    if (r <= 0) TILES.drawChecker(ctx, v, GFX.W, GFX.H, opts(false));
+    else if (r >= R * 0.999) TILES.drawChecker(ctx, v, GFX.W, GFX.H, opts(true));
+    else {
+      // outside the growing circle, day; inside it, night — and every animal turned round
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, GFX.W, GFX.H); ctx.arc(GFX.W / 2, GFX.H / 2, r, 0, Math.PI * 2, true); ctx.clip('evenodd');
+      TILES.drawChecker(ctx, v, GFX.W, GFX.H, opts(false));
+      ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.arc(GFX.W / 2, GFX.H / 2, r, 0, Math.PI * 2); ctx.clip();
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, GFX.W, GFX.H);
+      TILES.drawChecker(ctx, v, GFX.W, GFX.H, opts(true));
+      ctx.restore();
+    }
   }
   GFX.upload2D();
   F.use[2] = 1;
@@ -312,6 +338,24 @@ function handoff() {
   HAND = { key, cam: c, cells, slots: R, pickIx, origin, triCentre };
   return HAND;
 }
+
+// frame a set of points as the camera at (phi, theta) would see them: centre and half-height
+function frameFor(points, phi, theta, margin) {
+  const v = [Math.cos(phi) * Math.cos(theta), Math.cos(phi) * Math.sin(theta), Math.sin(phi)];
+  const up = [-Math.sin(phi) * Math.cos(theta), -Math.sin(phi) * Math.sin(theta), Math.cos(phi)];
+  const right = V3.norm(V3.cross(V3.mul(v, -1), up));
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, d = 0;
+  for (const p of points) {
+    const x = V3.dot(p, right), y = V3.dot(p, up);
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); d += V3.dot(p, v);
+  }
+  d /= points.length;
+  const tgt = V3.add(V3.add(V3.mul(right, (x0 + x1) / 2), V3.mul(up, (y0 + y1) / 2)), V3.mul(v, d));
+  const aspect = GFX.W / GFX.H;
+  const half = Math.max((y1 - y0) / 2, (x1 - x0) / 2 / aspect) * (margin || 1.15);
+  return { tgt, half };
+}
+const corners = (min, max) => { const o = []; for (let k = 0; k < 8; k++) o.push([(k & 1) ? max[0] : min[0], (k & 2) ? max[1] : min[1], (k & 4) ? max[2] : min[2]]); return o; };
 // box helpers
 const bx = (min, max) => [V3.mul(V3.add(min, max), 0.5), V3.mul(V3.sub(max, min), 0.5)];
 function pushAABB(b, min, max, par, par2) { const [c, h] = bx(min, max); b.box(c, h, null, par, par2); }
@@ -388,7 +432,7 @@ const MOB = {
     return MOB._a0;
   },
   // looking straight down at the end, the ring's outer edge sits on the circle limit
-  topHalf() { return (MOB.R + 0.65) / (DISK_FRAC * Math.min(GFX.W, GFX.H) / GFX.H); },
+  topHalf() { return (MOB.R + 0.65) * GFX.H / (2 * DISK_FRAC * Math.min(GFX.W, GFX.H)); },
 };
 const DISK_FRAC = 0.46;   // the Poincaré disk's radius, as a fraction of the shorter screen side
 
@@ -408,7 +452,7 @@ function antMesh() {
   return GEO.merge(parts);
 }
 
-function drawSolid(t, F) {
+function drawSolid(t, F, fadeOut) {
   const H0 = handoff();
   const night = t < T(24) ? 1 : 0;
   GFX.begin3D();
@@ -417,8 +461,12 @@ function drawSolid(t, F) {
   const aspect = GFX.W / GFX.H;
   const fitH = (hw, hh) => Math.max(hh, hw / aspect);
   const topHalf = GFX.H / (2 * H0.cam.s);
-  const triHalf = fitH(3.3, 2.95);
-  const stairHalf = fitH(8.2, 6.6);
+  H0.triPts = H0.triPts || [].concat(...[[[0, 0, 0], [4, 1, 1]], [[3, 1, 0], [4, 4, 1]], [[3, 3, 1], [4, 4, 3]]].map(([a, b]) => corners(V3.add(H0.origin, a), V3.add(H0.origin, b))));
+  const TRI = H0.triFrame || (H0.triFrame = frameFor(H0.triPts, PHI_ISO, Math.PI / 4, aspect < 1 ? 1.12 : 1.22));
+  const triHalf = TRI.half;
+  const stairOriginF = V3.sub(H0.triCentre, STAIRS.centre);
+  const STF = H0.stairFrame || (H0.stairFrame = frameFor([].concat(...STAIRS.slabs.map((sl) => corners(V3.add(stairOriginF, V3.add(sl.c, [-0.5, -0.5, -1])), V3.add(stairOriginF, V3.add(sl.c, [0.5, 0.5, 0]))))), PHI_ST, Math.PI / 4, aspect < 1 ? 1.08 : 1.16));
+  const stairHalf = STF.half;
   // ── camera ──
   if (t < T(16)) {
     const p = easeIO(sat((t - T(15)) / (T(16) - T(15))));
@@ -427,15 +475,16 @@ function drawSolid(t, F) {
     cam = camera3D(tgt, phi, theta, lerp(topHalf, topHalf * 0.8, p));
   } else if (t < T(20)) {
     const z = easeIO(sat((t - T(16)) / (T(17, 6) - T(16))));
-    const tgt = V3.lerp([H0.cam.cx, H0.cam.cy, 0.5], H0.triCentre, z);
     let theta = Math.PI / 4, phi = PHI_ISO;
     const r = (t - T(18)) / (T(20) - T(18));
     if (r > 0) { const e = Math.sin(Math.PI * Math.pow(sat(r), 0.85)); theta += 44 * DEG * e; phi += 16 * DEG * e * (1 - r); }
-    cam = camera3D(tgt, phi, theta, lerp(topHalf * 0.8, triHalf, z) * (1 + 0.12 * Math.sin(Math.PI * sat(r))));
+    // while circling, keep the real shape framed (its silhouette wanders as the view turns)
+    const fr = r > 0 ? frameFor(H0.triPts, phi, theta, aspect < 1 ? 1.12 : 1.22) : TRI;
+    const tgt = V3.lerp([H0.cam.cx, H0.cam.cy, 0.5], fr.tgt, z);
+    cam = camera3D(tgt, phi, theta, lerp(topHalf * 0.8, Math.max(triHalf, fr.half), z) * (1 + 0.1 * Math.sin(Math.PI * sat(r))));
   } else if (t < T(24)) {
     const z = easeIO(sat((t - T(20, 2)) / (T(21, 4) - T(20, 2))));
-    const stairTgt = H0.triCentre;
-    cam = camera3D(V3.lerp(H0.triCentre, stairTgt, z), lerp(PHI_ISO, PHI_ST, z), Math.PI / 4, lerp(triHalf, stairHalf, z));
+    cam = camera3D(V3.lerp(TRI.tgt, STF.tgt, z), lerp(PHI_ISO, PHI_ST, z), Math.PI / 4, lerp(triHalf, stairHalf, z));
   } else {
     // §4: leave the magic view; circle the strip; at the end look straight down into the ring
     const a = t - T(24);
@@ -445,7 +494,7 @@ function drawSolid(t, F) {
     const theta = orbit;
     const ringHalf = fitH(6.4, 6.0);
     const topHalf2 = MOB.topHalf();
-    cam = camera3D(H0.triCentre, phi, theta, lerp(lerp(stairHalf, ringHalf, ss(T(24), T(26), t)), topHalf2, easeIO(up)));
+    cam = camera3D(V3.lerp(STF.tgt, H0.triCentre, ss(T(24), T(26), t)), phi, theta, lerp(lerp(stairHalf, ringHalf, ss(T(24), T(26), t)), topHalf2, easeIO(up)));
   }
   // ── §2½: the checkerboard rises ──
   if (t < T(18)) {
@@ -493,8 +542,9 @@ function drawSolid(t, F) {
   }
   // ── the tribar comes apart into the twenty treads of the endless stairs ──
   const stairOrigin = V3.sub(H0.triCentre, STAIRS.centre);
-  if (t >= T(20, 2) && t < T(24)) {
+  if (t >= T(20, 2) && t < T(24) + BEAT) {
     const u0 = T(20, 2);
+    if (t < T(24)) {
     STAIRS.slabs.forEach((sl, k) => {
       const tt = easeIO(sat((t - u0 - k * 0.022) / (T(21, 4) - u0)));
       const from = V3.add(H0.origin, TRI_TO_STAIR[k]);
@@ -504,9 +554,10 @@ function drawSolid(t, F) {
       const h = [lerp(0.19, 0.5, tt), 0.5, 0.5];
       batch.box(c, h, null, [0, 1, 0, 0.785]);
     });
+    }
     // the walkers: up one step on every beat; the ones in front go the other way
-    if (t >= T(21) && t < T(24)) {
-      const appear = ss(T(21), T(21, 6), t);
+    if (t >= T(21) && t < T(24) + BEAT) {
+      const appear = ss(T(21), T(21, 6), t) * (1 - ss(T(24) - 0.05, T(24) + BEAT, t));
       const beats = (t - T(21)) / BEAT;
       const walkers = [0, 3, 6, 9, 12, 15, 18, 21].map((p0) => ({ p0, dir: 1 })).concat([4.5, 16.5].map((p0) => ({ p0, dir: -1 })));
       walkers.forEach((w, n) => {
@@ -540,7 +591,8 @@ function drawSolid(t, F) {
       const X = V3.norm(V3.lerp(f0.x, f1.x, flat));
       let Z = V3.lerp(f0.z, f1.z, flat); Z = V3.norm(V3.sub(Z, V3.mul(X, V3.dot(Z, X))));
       const Y = V3.cross(Z, X);
-      const h = [lerp(0.5, MOB.len / 2, flat), lerp(0.5, MOB.width(t) / 2, flat), lerp(0.5, MOB.thick / 2, flat)];
+      const fo = fadeOut === undefined ? 1 : fadeOut;
+      const h = [lerp(0.5, MOB.len / 2, flat) * fo, lerp(0.5, MOB.width(t) / 2, flat), lerp(0.5, MOB.thick / 2, flat) * fo];
       batch.box(c, h, [X, Y, Z], [0, 1, 0, lerp(0.785, 0, flat)]);
     });
     // the walkers shrink away; ants take their place and march over both sides of the one side
@@ -574,6 +626,11 @@ function drawSolid(t, F) {
   GFX.end3D();
   F.use[1] = 1;
   if (night) F.invert = 1;
+  const w0 = T(24) - 0.02;
+  if (t >= w0 && t < w0 + 0.6) {
+    const R = Math.hypot(GFX.W, GFX.H) * 0.55, r = easeOut(sat((t - w0) / 0.6)) * R;
+    F.invert = 1; F.wipe = [GFX.W / 2, GFX.H / 2, Math.max(0.5, r), 2.5 * GFX.scale];
+  }
 }
 const EIGHTH_S = SYNTH.EIGHTH;
 
@@ -588,7 +645,7 @@ const HYP_FS = `
 uniform vec4 uMob;        // Möbius motion: a (the point sent to the centre), rotation (cos, sin)
 uniform vec4 uShape;      // S-curve amplitudes (a1, a2, a3), detail visibility
 uniform vec4 uDisk;       // centre (px), radius (px), edge line width (px)
-uniform vec4 uLook;       // invert, tile→gray fade, pulse, unused
+uniform vec4 uLook;       // invert (before the current flip), tile→grey fade, flip radius, bloom radius
 vec2 cmul(vec2 a, vec2 b){ return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x); }
 vec2 cdiv(vec2 a, vec2 b){ float d = dot(b,b); return vec2(a.x*b.x + a.y*b.y, a.y*b.x - a.x*b.y) / d; }
 vec2 cconj(vec2 a){ return vec2(a.x, -a.y); }
@@ -662,9 +719,15 @@ void main(){
   // the rim
   float edge = abs(r - 1.0) * uDisk.z;
   float rim = 1.0 - smoothstep(uDisk.w - 0.7, uDisk.w + 0.7, edge);
+  float inv = uLook.x;
+  if (r < uLook.z) inv = 1.0 - inv;
+  ink = mix(ink, 1.0 - ink, inv);
+  // the tiling blooms out from the centre inside the ring
+  float bloom = 1.0 - smoothstep(uLook.w - 0.02, uLook.w, r);
+  ink *= bloom; cover *= bloom;
   ink = max(ink * cover, rim);
   cover = max(cover, rim);
-  ink = mix(ink, 1.0 - ink, uLook.x) * cover;
+  ink *= cover;
   o = vec4(ink, cover, 0.0, 1.0);
 }
 `;
@@ -687,12 +750,19 @@ function drawCircleLimit(t, F) {
   const mv = hypMotion(t);
   // S-curve: lobes swell in on the drop
   const amp = lerp(0.0, 1, grow);
-  const flip = [T(34), T(36), T(38)].reduce((acc, b) => acc + (t >= b ? 1 : 0), 0) & 1;
+  // figure and ground change places on bars 34, 36 and 38, in a ring that runs outward
+  const flips = [T(34), T(36), T(38)];
+  let base = 0, fr = 0;
+  for (const tf of flips) {
+    if (t >= tf + 0.4) base ^= 1;
+    else if (t >= tf) fr = easeOut((t - tf) / 0.4) * 1.05;
+  }
+  const bloom = easeOut(sat((t - T(32)) / 0.55)) * 1.06;
   GFX.runScene('hyp', {
     uMob: [mv.A[0], mv.A[1], mv.rot[0], mv.rot[1]],
     uShape: [0.34 * amp, 0.1 * amp, -0.05 * amp, ss(0.6, 0.95, amp)],
     uDisk: [W / 2, H / 2, R * lerp(0.985, 1, grow), Math.max(1.2, 1.6 * GFX.scale)],
-    uLook: [flip, 1, 0, 0],
+    uLook: [base, 1, fr, bloom],
   });
   F.use[0] = 1;
 }
@@ -792,7 +862,7 @@ function frame(t, o) {
   const F = { use: [0, 0, 0], T: t, invert: 0 };
   if (t < T(15)) drawPlane(t, F);
   else if (t < T(32)) drawSolid(t, F);
-  else if (t < T(40)) drawCircleLimit(t, F);
+  else if (t < T(40)) { drawCircleLimit(t, F); if (t < T(32) + 0.5) drawSolid(T(32) - 0.001, F, 1 - sat((t - T(32)) / 0.5)); }
   else drawGallery(Math.min(t, PIECE), F);
   // the last seconds: the music rings out over the title
   GFX.composite(F);

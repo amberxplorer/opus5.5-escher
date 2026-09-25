@@ -144,10 +144,10 @@ function buildScore() {
   for (let b = 1; b < 8; b++) organ(b, { vel: 0.8 + b * 0.02, center: 250 + b * 8 });
   for (let b = 8; b < 16; b++) organ(b, { vel: b < 12 ? 0.62 : 0.7, center: b < 12 ? 380 : 300 });
   for (let b = 16; b < 24; b++) organ(b, { vel: b === 18 || b === 19 ? 0.85 : 0.5, center: 360 });
-  for (let b = 24; b < 32; b++) organ(b, { vel: 0.9, att: 0.35, rel: 0.7, center: 320 });
+  for (let b = 24; b < 32; b++) organ(b, { vel: b < 28 ? 0.66 : 0.72, att: 0.35, rel: 0.7, center: 320 });
   for (let b = 32; b < 40; b++) organ(b, { vel: 0.55, center: 420 });
-  for (let b = 40; b < 44; b++) organ(b, { vel: 0.85, att: 0.25, rel: 0.6, center: 360 });
-  for (let b = 44; b < 48; b++) organ(b, { vel: 0.8 - (b - 44) * 0.03, center: 300 - (b - 44) * 10 });
+  for (let b = 40; b < 44; b++) organ(b, { vel: 0.7, att: 0.25, rel: 0.6, center: 360 });
+  for (let b = 44; b < 48; b++) organ(b, { vel: 0.66 - (b - 44) * 0.03, center: 300 - (b - 44) * 10 });
   organ(48, { vel: 0.75, att: 0.06, dur: TAIL - 0.4, rel: 1.6, center: 240 });
 
   /* ── bass: the descending ground, Shepard-stacked ── */
@@ -165,7 +165,7 @@ function buildScore() {
   };
   drive(16, 24, (b) => b === 18 || b === 19);
   bassNote(18, 0, 11.7, 0.8, 0); bassNote(19, 0, 11.7, 0.8, 0); // the reveal: held notes
-  for (let b = 24; b < 28; b++) bassNote(b, 0, 11.6, 0.6, 0);
+  for (let b = 24; b < 28; b++) bassNote(b, 0, 11.6, 0.48, 0);
   for (let b = 28; b < 32; b++) { bassNote(b, 0, 5.6, 0.75, 0.3); bassNote(b, 6, 5.6, 0.62, 0.3); }
   drive(32, 40);
   for (let b = 40; b < 44; b++) bassNote(b, 0, 11.7, 0.75, 0);
@@ -214,16 +214,16 @@ function buildScore() {
   phrase(S.lead, 8, 0, 4, { vel: 0.85 });
   phrase(S.lead, 12, 4, 8, { vel: 0.9, invert: true, near: 78 });
   phrase(S.lead, 16, 0, 8, { vel: 1, voice: 1 });
-  phrase(S.lead, 24, 0, 8, { vel: 0.75 });
+  phrase(S.lead, 24, 0, 8, { vel: 0.58 });
   phrase(S.lead, 32, 0, 8, { vel: 1, voice: 1 });
   phrase(S.lead, 40, 0, 2, { vel: 0.8, speed: 0.5 });
-  phrase(S.lead, 44, 4, 8, { vel: 0.72 });
+  phrase(S.lead, 44, 4, 8, { vel: 0.6 });
   // canon voices (celesta), a bar behind, an octave up
   phrase(S.canon, 9, 0, 3, { vel: 0.55, near: 83, pan: 0.35, snap: 1 });
   phrase(S.canon, 13, 4, 7, { vel: 0.6, invert: true, near: 86, pan: 0.35 });
   phrase(S.canon, 17, 0, 7, { vel: 0.6, near: 85, pan: 0.4, snap: 1 });
   // the crab: the subject backwards, against itself
-  phrase(S.canon, 24, 0, 8, { vel: 0.72, retro: true, near: 82, pan: -0.3 });
+  phrase(S.canon, 24, 0, 8, { vel: 0.62, retro: true, near: 82, pan: -0.3 });
   // augmentation (tenor organ, half speed) and diminution (celesta, double speed)
   phrase(S.canon, 32, 0, 4, { vel: 0.8, speed: 0.5, near: 58, voice: 2, legato: 0.98 });
   phrase(S.canon, 32, 0, 8, { vel: 0.42, speed: 2, near: 84, pan: 0.45 });
@@ -254,12 +254,12 @@ function buildScore() {
   };
   for (let b = 2; b < 4; b++) harpBar(b, 'A', 0.5 + (b - 2) * 0.15);
   for (let b = 4; b < 8; b++) harpBar(b, 'A', 0.72);
-  for (let b = 8; b < 16; b++) harpBar(b, 'A', b >= 14 ? 0.82 : 0.75);
+  for (let b = 8; b < 16; b++) harpBar(b, 'A', b >= 14 ? 0.78 : 0.68);
   for (let b = 16; b < 24; b++) { if (b === 18 || b === 19) harpBar(b, 'C', 0.55); else harpBar(b, 'B', 0.8); }
-  for (let b = 24; b < 28; b++) harpBar(b, 'C', 0.5);
+  for (let b = 24; b < 28; b++) harpBar(b, 'C', 0.42);
   for (let b = 28; b < 32; b++) harpBar(b, 'A', 0.55 + (b - 28) * 0.07);
   for (let b = 32; b < 40; b++) harpBar(b, 'D', 0.82);
-  for (let b = 44; b < 48; b++) harpBar(b, 'A', 0.62 - (b - 44) * 0.06);
+  for (let b = 44; b < 48; b++) harpBar(b, 'A', 0.5 - (b - 44) * 0.05);
 
   /* ── strings (a real, voice-led section) ── */
   let prev = [57, 62, 65, 69];
@@ -278,10 +278,10 @@ function buildScore() {
     prev = next;
     S.strings.push({ t: T(b), dur: o.dur || BAR, notes: next.slice(), vel, att: o.att || 0.25, rel: o.rel || 0.5, bright: o.bright || 1, bar: b });
   };
-  for (let b = 8; b < 16; b++) strings(b, b < 12 ? 0.55 : 0.62, { att: 0.4, bright: b < 12 ? 1 : 0.7 });
+  for (let b = 8; b < 16; b++) strings(b, b < 12 ? 0.42 : 0.5, { att: 0.4, bright: b < 12 ? 1 : 0.7 });
   for (let b = 16; b < 24; b++) strings(b, b === 18 || b === 19 ? 0.7 : 0.85, { att: b === 16 || b === 20 ? 0.02 : 0.2, bright: 1.1 });
   for (let b = 32; b < 40; b++) strings(b, 0.95, { att: b === 32 ? 0.02 : 0.15, bright: 1.25 });
-  for (let b = 40; b < 44; b++) strings(b, 0.6, { att: 0.6, rel: 0.8, bright: 0.85 });
+  for (let b = 40; b < 44; b++) strings(b, 0.46, { att: 0.6, rel: 0.8, bright: 0.85 });
 
   /* ── drums & clockwork ── */
   const HATV = [1, 0.38, 0.62, 0.38, 0.62, 0.38, 0.9, 0.38, 0.62, 0.38, 0.62, 0.45];
@@ -292,10 +292,10 @@ function buildScore() {
   // §2: the sway
   for (let b = 8; b < 16; b++) {
     if (b === 15) break;
-    S.kick.push({ t: T(b), vel: 0.9 });
-    if (b % 2 === 1) S.kick.push({ t: T(b, 10), vel: 0.45 });
-    S.clap.push({ t: T(b, 6), vel: 0.75 });
-    for (let s = 0; s < 12; s++) S.hatC.push({ t: T(b, s) + hum(0.004), vel: HATV[s] * 0.55 });
+    S.kick.push({ t: T(b), vel: 0.78 });
+    if (b % 2 === 1) S.kick.push({ t: T(b, 10), vel: 0.4 });
+    S.clap.push({ t: T(b, 6), vel: 0.6 });
+    for (let s = 0; s < 12; s++) S.hatC.push({ t: T(b, s) + hum(0.004), vel: HATV[s] * 0.5 });
   }
   S.kick.push({ t: T(15), vel: 0.9 });
   // bar 15: roll in sixteenths then 32nds
@@ -322,7 +322,7 @@ function buildScore() {
   for (let s = 6; s < 12; s++) S.tom.push({ t: T(19, s), note: 52 - s, vel: 0.5 + s * 0.04 });
   // the stairs: footsteps and an endless ascending arpeggio
   let shepIx = 0;
-  for (let b = 20; b < 24; b++) for (const s of [0, 6]) {
+  for (let b = 21; b < 24; b++) for (const s of [0, 6]) {
     S.step.push({ t: T(b, s), vel: 0.9, alt: s ? 1 : 0 });
     const pcs = CH(b).tones.map(pc);
     const arp = []; for (let q = 48; arp.length < 40; q++) if (pcs.includes(pc(q))) arp.push(q);
@@ -358,8 +358,8 @@ function buildScore() {
     L.sort((a, b) => a.t - b.t);
     for (const e of L) {
       if (e.w < 0.03) continue;
-      if (e.layer <= 2) S.kick.push({ t: e.t, vel: 0.95 * e.w, risset: 1 });
-      if (e.layer >= 2) S.hatC.push({ t: e.t, vel: 0.75 * e.w, risset: 1 });
+      if (e.layer <= 2) S.kick.push({ t: e.t, vel: 0.56 * e.w, risset: 1 });
+      if (e.layer >= 2) S.hatC.push({ t: e.t, vel: 0.52 * e.w, risset: 1 });
       S.risset.push([e.t, e.layer, e.w]);
     }
   }
@@ -380,7 +380,7 @@ function buildScore() {
   S.gliss.push({ t: T(6, 6), dur: T(8) - T(6, 6), vel: 0.7, rate: 5, shape: 'rise' });
   S.gliss.push({ t: T(14), dur: T(16) - T(14), vel: 0.85, rate: 6, shape: 'rise' });
   S.gliss.push({ t: T(28), dur: T(32) - T(28), vel: 0.9, rate: 4, shape: 'rise' });
-  S.gliss.push({ t: T(40), dur: T(44) - T(40), vel: 0.62, rate: 3.2, shape: 'hold' });
+  S.gliss.push({ t: T(40), dur: T(44) - T(40), vel: 0.46, rate: 3.2, shape: 'hold' });
 
   /* ── bells ── */
   S.bell.push({ t: 0.35, note: 81, vel: 0.35, decay: 3.2, pan: -0.2 });
@@ -637,7 +637,8 @@ function* renderGen(opts) {
 
   /* ---------- voices ---------- */
   const voices = [];
-  const V = (v, o) => { Object.assign(v, o); voices.push(v); return v; };
+  const only = opts.onlyStems || null;   // debugging: render just some stems
+  const V = (v, o) => { Object.assign(v, o); if (!only || only.includes(STEMS[o.stem])) voices.push(v); return v; };
 
   function SampleVoice(t, L, R, rate, pan) {
     this.start = Math.round(t * SR);
@@ -735,16 +736,17 @@ function* renderGen(opts) {
     for (const o of [-12, 0, 12]) {
       const f = mtof(p.note + o);
       if (f > 4200 || f < 35) continue;
-      const w = gauss(Math.log2(f / center) / sigma) * (o === 0 ? 1.15 : 1);
+      const w = gauss(Math.log2(f / center) / sigma) * (o === 0 ? 1.15 : o < 0 ? 0.6 : 1);
       if (w < 0.06) continue;
       norm += w * w;
-      let D = SR / f - 0.35;
+      let D = SR / f - 0.3;
       let Ni = Math.floor(D), fr = D - Ni;
       if (fr < 0.2) { Ni -= 1; fr += 1; }
       const buf = new Float32Array(Ni);
       let lp = 0;
       const tmp = new Float32Array(Ni);
-      for (let i = 0; i < Ni; i++) { lp += (noise() - lp) * 0.86; tmp[i] = lp; }
+      let lp2 = 0;
+      for (let i = 0; i < Ni; i++) { lp += (noise() - lp) * 0.62; lp2 += (lp - lp2) * 0.62; tmp[i] = lp2; }
       const pick = Math.max(1, Math.round(Ni * 0.09));
       let mean = 0;
       for (let i = 0; i < Ni; i++) { buf[i] = tmp[i] - 0.8 * tmp[(i + pick) % Ni]; mean += buf[i]; }
@@ -774,7 +776,7 @@ function* renderGen(opts) {
       for (let k = 0; k < len; k++, local++) {
         const rho = local < noteLen ? s.rho : s.rhoD;
         const out = buf[p];
-        const avg = (0.62 * out + 0.38 * prev) * rho;
+        const avg = (0.7 * out + 0.3 * prev) * rho;
         prev = out;
         const y = C * avg + x1 - C * y1;
         x1 = avg; y1 = y;
@@ -1212,6 +1214,18 @@ function* renderGen(opts) {
       const A = Math.pow(10, 2 / 40), w = TAU * 5500 / SR, c = Math.cos(w), al2 = Math.sin(w) / 2 * Math.SQRT2, sq = 2 * Math.sqrt(A) * al2;
       const b0 = A * ((A + 1) + (A - 1) * c + sq), b1 = -2 * A * ((A - 1) + (A + 1) * c), b2 = A * ((A + 1) + (A - 1) * c - sq);
       const a0 = (A + 1) - (A - 1) * c + sq, a1 = 2 * ((A - 1) - (A + 1) * c), a2 = (A + 1) - (A - 1) * c - sq;
+      for (const x of [outL, outR]) {
+        let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+        for (let i = 0; i < N; i++) {
+          const y = (b0 * x[i] + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2) / a0;
+          x2 = x1; x1 = x[i]; y2 = y1; y1 = y; x[i] = y;
+        }
+      }
+    }
+    {
+      // −1.8 dB around 260 Hz (RBJ peaking, Q 0.8): room for the harpsichord and the lead
+      const A = Math.pow(10, -1.8 / 40), w = TAU * 260 / SR, c = Math.cos(w), al2 = Math.sin(w) / (2 * 0.8);
+      const b0 = 1 + al2 * A, b1 = -2 * c, b2 = 1 - al2 * A, a0 = 1 + al2 / A, a1 = -2 * c, a2 = 1 - al2 / A;
       for (const x of [outL, outR]) {
         let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
         for (let i = 0; i < N; i++) {

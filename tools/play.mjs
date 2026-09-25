@@ -1,26 +1,24 @@
 // Real playback smoke test: loads the page normally, clicks, lets it run, reports clock + errors + fps.
+// usage: node tools/play.mjs <seconds> [startAt] [fontDir] [WxH]
 import path from 'node:path';
-import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import pw from '/opt/node22/lib/node_modules/playwright/index.js';
+import { routeFonts } from './fonts.mjs';
 const { chromium } = pw;
 const here = path.dirname(fileURLToPath(import.meta.url));
-const [secs = '6', startAt = '0', fontDir] = process.argv.slice(2);
+const [secs = '6', startAt = '0', fontDir, size = '960x540'] = process.argv.slice(2);
+const [W, H] = size.split('x').map(Number);
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
-const page = await (await browser.newContext({ viewport: { width: 960, height: 540 } })).newPage();
+const page = await (await browser.newContext({ viewport: { width: W, height: H } })).newPage();
 const errors = [];
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text().slice(0, 300)); });
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-if (fontDir) {
-  const map = Object.fromEntries(fs.readFileSync(path.join(fontDir, 'map.txt'), 'utf8').trim().split('\n').map((l) => { const [i, u] = l.split(' '); return [u, `f${i}.woff2`]; }));
-  await page.route('https://fonts.googleapis.com/**', (r) => r.fulfill({ status: 200, contentType: 'text/css', body: fs.readFileSync(path.join(fontDir, r.request().url().includes('Shippori') ? 'sm.css' : 'jb.css'), 'utf8') }));
-  await page.route('https://fonts.gstatic.com/**', (r) => { const f = map[r.request().url()]; return f ? r.fulfill({ status: 200, contentType: 'font/woff2', body: fs.readFileSync(path.join(fontDir, f)) }) : r.abort(); });
-} else await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+await routeFonts(page, fontDir);
 const t0 = Date.now();
 await page.goto('file://' + path.join(here, '../index.html') + (startAt !== '0' ? `?t=${startAt}` : ''));
 await page.waitForFunction(() => window.__state && window.__state().ready, null, { timeout: 120000 });
 console.log('ready after', ((Date.now() - t0) / 1000).toFixed(1), 's', JSON.stringify(await page.evaluate(() => window.__state())));
-await page.mouse.click(480, 270);
+await page.mouse.click(W / 2, H / 2);
 const samples = [];
 for (let i = 0; i < Number(secs); i++) {
   await page.waitForTimeout(1000);
